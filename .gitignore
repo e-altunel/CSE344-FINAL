@@ -1,0 +1,8 @@
+build
+.vscode
+
+*.out
+*.o
+
+HungryVeryMuch
+PideShop
