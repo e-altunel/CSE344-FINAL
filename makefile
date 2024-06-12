@@ -1,9 +1,9 @@
-CC = g++
-CFLAGS = -std=c++20
+CC = gcc
+CFLAGS = -Wall -Wextra -Werror -pedantic -std=c11 -g
 
 all: PideShop HungryVeryMuch
 
-build/%.o: %.cpp utils.h
+build/%.o: %.c utils.h
 	mkdir -p build
 	$(CC) $(CCFLAGS) -c $< -o $@
 
@@ -27,7 +27,7 @@ server: PideShop
 re: clean all
 
 test: build/utils.o
-	$(CC) $(CCFLAGS) test.cpp build/utils.o -o test.out
+	$(CC) $(CCFLAGS) test.c build/utils.o -o test.out
 	./test.out
 
 .PHONY: all clean re client server test
