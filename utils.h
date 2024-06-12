@@ -1,14 +1,12 @@
 #ifndef UTILS
 #define UTILS
 
-#include <cstdlib>
-#include <iostream>
+#pragma region Structs
 
-// Args Parser
+#pragma endregion
 
-const int parse_int (const char *str, int min = INT32_MIN,
-                     int max = INT32_MAX);
+#pragma region Functions
 
-//
+#pragma endregion
 
-#endif /* UTILS */
+#endif // UTILS
