@@ -1,32 +1,38 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -pedantic -std=c11 -g
+CFLAGS = -Wall -Wextra -Werror -pedantic -ansi -g
+
+incs = $(wildcard src/*.h)
+objs = $(patsubst src/%.c, build/%.o, $(wildcard src/*.c))
 
 all: PideShop HungryVeryMuch
 
-build/%.o: %.c utils.h
+build/%.o: src/%.c $(incs)
 	mkdir -p build
-	$(CC) $(CCFLAGS) -c $< -o $@
+	$(CC) $(CCFLAGS) -c $< -o $@ -Iinc
 
-PideShop: build/server.o build/utils.o
+%.o: %.c $(incs)
+	$(CC) $(CCFLAGS) -c $< -o $@ -Iinc
+
+PideShop: $(objs) server.o
 	$(CC) $(CCFLAGS) $^ -o $@ 
 
-HungryVeryMuch: build/client.o build/utils.o
+HungryVeryMuch: $(objs) client.o
 	$(CC) $(CCFLAGS) $^ -o $@ 
 
 clean:
-	rm -rf  PideShop HungryVeryMuch
+	rm -rf PideShop HungryVeryMuch
 
 client: HungryVeryMuch
 	clear
-	valgrind -q ./HungryVeryMuch 8080 10 10 10
+	valgrind -q --leak-check=full ./HungryVeryMuch 8080 10 10 10
 
 server: PideShop
 	clear
-	valgrind -q ./PideShop 8080 10 10 10
+	valgrind -q --leak-check=full ./PideShop 8080 10 10 10
 
 re: clean all
 
-test: build/utils.o
+test: $(objs)
 	$(CC) $(CCFLAGS) test.c build/utils.o -o test.out
 	./test.out
 
