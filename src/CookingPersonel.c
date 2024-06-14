@@ -165,7 +165,8 @@ int t_CookingPersonel_cook(t_CookingPersonel *personel) {
   }
 
   pthread_mutex_lock(&personel->variable_lock);
-  personel->pending_order->is_cooked = 1;
+  if (personel->pending_order != 0)
+    personel->pending_order->is_cooked = 1;
   pthread_mutex_unlock(&personel->variable_lock);
 
   return 0;
