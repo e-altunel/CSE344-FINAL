@@ -75,26 +75,18 @@ void *t_CookingPersonel_prepare_thread(void *arg) {
   t_CookingPersonel *personel = (t_CookingPersonel *)arg;
   t_OrderDeque      *deque    = personel->deque_ref;
 
-  pthread_mutex_lock(&personel->variable_lock);
-  while (personel->is_exit == 0 || personel->active_order != 0) {
-    if (personel->active_order == 0) {
+  while (t_CookingPersonel_is_exit(personel) == 0 || t_CookingPersonel_has_active_order(personel)) {
+    if (t_CookingPersonel_has_active_order(personel) == 0) {
       if (t_OrderDeque_dequeue(deque, &personel->active_order, ORDER_REQUEST_MODE_NON_BLOCKING)) {
-        pthread_mutex_unlock(&personel->variable_lock);
         usleep(10000);
-        pthread_mutex_lock(&personel->variable_lock);
         continue;
       }
-      printf("Personel %d got order %d\n", personel->id, personel->active_order->id);
     }
-    pthread_mutex_unlock(&personel->variable_lock);
 
     t_CookingPersonel_prepare(personel);
     t_CookingPersonel_insert(personel);
-
-    pthread_mutex_lock(&personel->variable_lock);
   }
-  pthread_mutex_unlock(&personel->variable_lock);
-  printf("Personel %d preapared3\n", personel->id);
+  printf("Personel %d exited prepare\n", personel->id);
 
   return 0;
 }
@@ -102,22 +94,17 @@ void *t_CookingPersonel_prepare_thread(void *arg) {
 void *t_CookingPersonel_cook_thread(void *arg) {
   t_CookingPersonel *personel = (t_CookingPersonel *)arg;
 
-  pthread_mutex_lock(&personel->variable_lock);
-  while (personel->is_exit == 0 || personel->pending_order != 0 || personel->active_order != 0) {
-    if (personel->pending_order == 0) {
-      pthread_mutex_unlock(&personel->variable_lock);
+  while (t_CookingPersonel_is_exit(personel) == 0 || t_CookingPersonel_has_active_order(personel) ||
+         t_CookingPersonel_has_pending_order(personel)) {
+    if (t_CookingPersonel_has_pending_order(personel) == 0) {
       usleep(10000);
       continue;
     }
-    pthread_mutex_unlock(&personel->variable_lock);
 
     t_CookingPersonel_cook(personel);
     t_CookingPersonel_remove(personel);
-
-    pthread_mutex_lock(&personel->variable_lock);
   }
-  pthread_mutex_unlock(&personel->variable_lock);
-  printf("Personel %d cooked3\n", personel->id);
+  printf("Personel %d exited cook\n", personel->id);
   return 0;
 }
 
@@ -248,4 +235,24 @@ int t_CookingPersonel_check_remove(const t_CookingPersonel *personel, pthread_mu
   }
   pthread_mutex_unlock(mutex);
   return 1;
+}
+
+int t_CookingPersonel_is_exit(t_CookingPersonel *personel) {
+  return personel->is_exit;
+}
+
+int t_CookingPersonel_has_active_order(t_CookingPersonel *personel) {
+  int result;
+  pthread_mutex_lock(&personel->variable_lock);
+  result = personel->active_order != 0;
+  pthread_mutex_unlock(&personel->variable_lock);
+  return result;
+}
+
+int t_CookingPersonel_has_pending_order(t_CookingPersonel *personel) {
+  int result;
+  pthread_mutex_lock(&personel->variable_lock);
+  result = personel->pending_order != 0;
+  pthread_mutex_unlock(&personel->variable_lock);
+  return result;
 }

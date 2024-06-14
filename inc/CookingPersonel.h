@@ -40,4 +40,8 @@ int t_CookingPersonel_check_insert(const t_CookingPersonel *personel, pthread_mu
 int t_CookingPersonel_check_cook(const t_CookingPersonel *personel, pthread_mutex_t *mutex);
 int t_CookingPersonel_check_remove(const t_CookingPersonel *personel, pthread_mutex_t *mutex);
 
+int t_CookingPersonel_is_exit(t_CookingPersonel *personel);
+int t_CookingPersonel_has_active_order(t_CookingPersonel *personel);
+int t_CookingPersonel_has_pending_order(t_CookingPersonel *personel);
+
 #endif /* INC_COOKINGPERSONEL */
