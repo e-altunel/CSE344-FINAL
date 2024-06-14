@@ -7,9 +7,9 @@
 
 typedef struct s_OrderDeque {
   t_Order        *orders;
-  unsigned int    head;
-  unsigned int    tail;
-  unsigned int    size;
+  int             head;
+  int             tail;
+  int             size;
   pthread_mutex_t mutex;
   sem_t           empty_slots;
   sem_t           full_slots;
@@ -30,5 +30,7 @@ void t_OrderDeque_destroy(t_OrderDeque *deque);
 int  t_OrderDeque_enqueue(t_OrderDeque *deque, t_Order *order, t_OrderRequestMode mode);
 int  t_OrderDeque_dequeue(t_OrderDeque *deque, t_Order **order, t_OrderRequestMode mode);
 int  t_OrderDeque_size(t_OrderDeque *deque);
+int  t_OrderDeque_cancel(t_OrderDeque *deque, int order_id);
+int  t_OrderDeque_clear_without_lock(t_OrderDeque *deque);
 
 #endif /* INC_ORDERDEQUE */

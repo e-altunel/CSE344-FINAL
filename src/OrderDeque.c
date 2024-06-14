@@ -92,12 +92,20 @@ int t_OrderDeque_dequeue(t_OrderDeque *deque, t_Order **order, t_OrderRequestMod
     return -1;
   }
 
+  if (deque->orders[deque->head].is_cancelled == 1) {
+    deque->head = (deque->head + 1) % deque->size;
+    pthread_mutex_unlock(&deque->mutex);
+    sem_post(&deque->empty_slots);
+    return -1;
+  }
+
   *order = (t_Order *)malloc(sizeof(t_Order));
   if (*order == 0) {
     pthread_mutex_unlock(&deque->mutex);
     sem_post(&deque->full_slots);
     return -1;
   }
+
   **order     = deque->orders[deque->head];
   deque->head = (deque->head + 1) % deque->size;
 
@@ -116,4 +124,40 @@ int t_OrderDeque_size(t_OrderDeque *deque) {
   pthread_mutex_unlock(&deque->mutex);
 
   return size;
+}
+
+int t_OrderDeque_cancel(t_OrderDeque *deque, int order_id) {
+  if (deque == 0)
+    return -1;
+
+  pthread_mutex_lock(&deque->mutex);
+
+  if (order_id == -1) {
+    t_OrderDeque_clear_without_lock(deque);
+    pthread_mutex_unlock(&deque->mutex);
+    return 0;
+  }
+
+  for (int i = deque->head; i != deque->tail; i = (i + 1) % deque->size) {
+    if (deque->orders[i].id == order_id) {
+      deque->orders[i].is_cancelled = 1;
+      pthread_mutex_unlock(&deque->mutex);
+      return 0;
+    }
+  }
+
+  pthread_mutex_unlock(&deque->mutex);
+  return -1;
+}
+
+int t_OrderDeque_clear_without_lock(t_OrderDeque *deque) {
+  if (deque == 0)
+    return -1;
+
+  while (deque->head != deque->tail) {
+    sem_wait(&deque->full_slots);
+    deque->head = (deque->head + 1) % deque->size;
+    sem_post(&deque->empty_slots);
+  }
+  return 0;
 }

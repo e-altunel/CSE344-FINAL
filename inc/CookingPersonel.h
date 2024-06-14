@@ -34,6 +34,7 @@ int t_CookingPersonel_prepare(t_CookingPersonel *personel);
 int t_CookingPersonel_insert(t_CookingPersonel *personel);
 int t_CookingPersonel_cook(t_CookingPersonel *personel);
 int t_CookingPersonel_remove(t_CookingPersonel *personel);
+int t_CookingPersonel_cancel(t_CookingPersonel *personel, int order_id);
 
 int t_CookingPersonel_check_prepare(const t_CookingPersonel *personel);
 int t_CookingPersonel_check_insert(const t_CookingPersonel *personel);

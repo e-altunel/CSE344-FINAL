@@ -17,5 +17,6 @@ int  t_CookingPersonelPool_init(t_CookingPersonelPool *pool, int personel_count,
 void t_CookingPersonelPool_destroy(t_CookingPersonelPool *pool);
 
 int  t_CookingPersonelPool_add_order(t_CookingPersonelPool *pool, t_Order *order, t_OrderRequestMode mode);
+int  t_CookingPersonelPool_cancel_order(t_CookingPersonelPool *pool, int order_id);
 void t_CookingPersonelPool_wait(t_CookingPersonelPool *pool);
 #endif /* INC_COOKINGPERSONELPOOL */

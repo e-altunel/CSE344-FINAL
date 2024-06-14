@@ -86,7 +86,6 @@ void *t_CookingPersonel_prepare_thread(void *arg) {
     t_CookingPersonel_prepare(personel);
     t_CookingPersonel_insert(personel);
   }
-  printf("Personel %d exited prepare\n", personel->id);
 
   return 0;
 }
@@ -104,7 +103,6 @@ void *t_CookingPersonel_cook_thread(void *arg) {
     t_CookingPersonel_cook(personel);
     t_CookingPersonel_remove(personel);
   }
-  printf("Personel %d exited cook\n", personel->id);
   return 0;
 }
 
@@ -126,7 +124,7 @@ int t_CookingPersonel_prepare(t_CookingPersonel *personel) {
 
   pthread_mutex_lock(&personel->variable_lock);
   if (personel->active_order != 0)
-  personel->active_order->is_prepared = 1;
+    personel->active_order->is_prepared = 1;
   pthread_mutex_unlock(&personel->variable_lock);
 
   return 0;
@@ -199,18 +197,39 @@ int t_CookingPersonel_remove(t_CookingPersonel *personel) {
   return 0;
 }
 
+int t_CookingPersonel_cancel(t_CookingPersonel *personel, int order_id) {
+  if (personel == 0)
+    return -1;
 
+  pthread_mutex_lock(&personel->variable_lock);
+  if (personel->active_order != 0 && (personel->active_order->id == order_id || order_id == -1)) {
+    free(personel->active_order);
+    personel->active_order = 0;
+    sem_post(&personel->oven_ref->available_aparatus);
+    if (order_id != -1) {
+      pthread_mutex_unlock(&personel->variable_lock);
+      return 0;
+    }
+  }
+
+  if (personel->pending_order != 0 && (personel->pending_order->id == order_id || order_id == -1)) {
+    free(personel->pending_order);
+    personel->pending_order = 0;
+    sem_post(&personel->oven_ref->available_slots);
+    pthread_mutex_unlock(&personel->variable_lock);
+    return 0;
+  }
+  pthread_mutex_unlock(&personel->variable_lock);
+  return -1;
+}
 
 int t_CookingPersonel_check_prepare(const t_CookingPersonel *personel) {
   if (personel == 0)
     return 0;
 
-  pthread_mutex_lock(mutex);
   if (personel->active_order == 0 || personel->active_order->is_prepared == 1) {
-    pthread_mutex_unlock(mutex);
     return 0;
   }
-  pthread_mutex_unlock(mutex);
   return 1;
 }
 
@@ -218,12 +237,9 @@ int t_CookingPersonel_check_insert(const t_CookingPersonel *personel) {
   if (personel == 0)
     return 0;
 
-  pthread_mutex_lock(mutex);
   if (personel->active_order == 0 || personel->active_order->is_prepared == 0 || personel->pending_order != 0) {
-    pthread_mutex_unlock(mutex);
     return 0;
   }
-  pthread_mutex_unlock(mutex);
   return 1;
 }
 
@@ -231,12 +247,9 @@ int t_CookingPersonel_check_cook(const t_CookingPersonel *personel) {
   if (personel == 0)
     return 0;
 
-  pthread_mutex_lock(mutex);
   if (personel->pending_order == 0 || personel->pending_order->is_cooked == 1) {
-    pthread_mutex_unlock(mutex);
     return 0;
   }
-  pthread_mutex_unlock(mutex);
   return 1;
 }
 
@@ -244,12 +257,9 @@ int t_CookingPersonel_check_remove(const t_CookingPersonel *personel) {
   if (personel == 0)
     return 0;
 
-  pthread_mutex_lock(mutex);
   if (personel->pending_order == 0 || personel->pending_order->is_cooked == 0) {
-    pthread_mutex_unlock(mutex);
     return 0;
   }
-  pthread_mutex_unlock(mutex);
   return 1;
 }
 

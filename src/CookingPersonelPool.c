@@ -55,6 +55,26 @@ int t_CookingPersonelPool_add_order(t_CookingPersonelPool *pool, t_Order *order,
   return t_OrderDeque_enqueue(&pool->startDeque, order, mode);
 }
 
+int t_CookingPersonelPool_cancel_order(t_CookingPersonelPool *pool, int order_id) {
+  if (pool == 0)
+    return -1;
+
+  int result = t_OrderDeque_cancel(&pool->startDeque, order_id);
+  if (result != -1 && order_id != -1)
+    return result;
+
+  result &= t_OrderDeque_cancel(&pool->finishedDeque, order_id);
+  if (result != -1 && order_id != -1)
+    return result;
+
+  for (int i = 0; i < pool->personel_count; i++) {
+    if ((result &= t_CookingPersonel_cancel(&pool->personels[i], order_id)) == 0 && order_id != -1)
+      return 0;
+  }
+
+  return result;
+}
+
 void t_CookingPersonelPool_wait(t_CookingPersonelPool *pool) {
   int remaining_orders = t_OrderDeque_size(&pool->startDeque);
   while (remaining_orders > 0) {
