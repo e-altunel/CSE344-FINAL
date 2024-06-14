@@ -35,10 +35,10 @@ int t_CookingPersonel_insert(t_CookingPersonel *personel);
 int t_CookingPersonel_cook(t_CookingPersonel *personel);
 int t_CookingPersonel_remove(t_CookingPersonel *personel);
 
-int t_CookingPersonel_check_prepare(const t_CookingPersonel *personel, pthread_mutex_t *mutex);
-int t_CookingPersonel_check_insert(const t_CookingPersonel *personel, pthread_mutex_t *mutex);
-int t_CookingPersonel_check_cook(const t_CookingPersonel *personel, pthread_mutex_t *mutex);
-int t_CookingPersonel_check_remove(const t_CookingPersonel *personel, pthread_mutex_t *mutex);
+int t_CookingPersonel_check_prepare(const t_CookingPersonel *personel);
+int t_CookingPersonel_check_insert(const t_CookingPersonel *personel);
+int t_CookingPersonel_check_cook(const t_CookingPersonel *personel);
+int t_CookingPersonel_check_remove(const t_CookingPersonel *personel);
 
 int t_CookingPersonel_is_exit(t_CookingPersonel *personel);
 int t_CookingPersonel_has_active_order(t_CookingPersonel *personel);
