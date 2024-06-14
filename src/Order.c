@@ -9,5 +9,8 @@ int t_Order_init(t_Order *order, int id) {
   order->is_cooked    = 0;
   order->is_delivered = 0;
   order->is_cancelled = 0;
+
+  order->delivery_location.x = 0;
+  order->delivery_location.y = 0;
   return 0;
 }
