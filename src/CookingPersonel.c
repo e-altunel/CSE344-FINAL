@@ -57,6 +57,8 @@ void t_CookingPersonel_destroy(t_CookingPersonel *personel) {
   pthread_mutex_destroy(&personel->job_lock);
   pthread_mutex_destroy(&personel->variable_lock);
 
+  printf("Cooking personel %d cooked %d orders\n", personel->id, personel->cooked_count);
+
   if (personel->active_order != 0)
     free(personel->active_order);
 
@@ -114,7 +116,7 @@ int t_CookingPersonel_prepare(t_CookingPersonel *personel) {
   }
   pthread_mutex_unlock(&personel->variable_lock);
 
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 10; i++) {
     pthread_mutex_lock(&personel->job_lock);
     sem_wait(&personel->oven_ref->available_aparatus);
     usleep(10000);
@@ -123,8 +125,10 @@ int t_CookingPersonel_prepare(t_CookingPersonel *personel) {
   }
 
   pthread_mutex_lock(&personel->variable_lock);
-  if (personel->active_order != 0)
+  if (personel->active_order != 0) {
     personel->active_order->is_prepared = 1;
+    printf("Personel %d prepared order %d\n", personel->id, personel->active_order->id);
+  }
   pthread_mutex_unlock(&personel->variable_lock);
 
   return 0;
@@ -160,13 +164,15 @@ int t_CookingPersonel_cook(t_CookingPersonel *personel) {
   }
   pthread_mutex_unlock(&personel->variable_lock);
 
-  for (int i = 0; i < 50; i++) {
+  for (int i = 0; i < 5; i++) {
     usleep(10000);
   }
 
   pthread_mutex_lock(&personel->variable_lock);
-  if (personel->pending_order != 0)
+  if (personel->pending_order != 0) {
     personel->pending_order->is_cooked = 1;
+    printf("Personel %d cooked order %d\n", personel->id, personel->pending_order->id);
+  }
   pthread_mutex_unlock(&personel->variable_lock);
 
   return 0;
