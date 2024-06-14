@@ -43,18 +43,22 @@ int t_CookOven_insert(t_CookOven *oven) {
   sem_wait(&oven->available_slots);
   sem_wait(&oven->available_aparatus);
   sem_wait(&oven->first_door);
-  printf("Inserting\n");
+
   sem_post(&oven->first_door);
   sem_post(&oven->available_aparatus);
+
+  return 0;
 }
 
 int t_CookOven_remove(t_CookOven *oven) {
   sem_wait(&oven->available_aparatus);
   sem_wait(&oven->second_door);
   sem_post(&oven->second_door);
-  printf("Removing\n");
+
   sem_post(&oven->available_aparatus);
   sem_post(&oven->available_slots);
+
+  return 0;
 }
 
 int t_CookOven_cancel(t_CookOven *oven) {
@@ -63,4 +67,6 @@ int t_CookOven_cancel(t_CookOven *oven) {
   sem_post(&oven->available_slots);
   sem_post(&oven->second_door);
   sem_post(&oven->available_aparatus);
+
+  return 0;
 }
