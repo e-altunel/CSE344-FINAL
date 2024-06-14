@@ -21,7 +21,7 @@ int t_OrderDeque_init(t_OrderDeque *deque, unsigned int size) {
     return -1;
   }
 
-  if (sem_init(&deque->empty_slots, 0, size) != 0) {
+  if (sem_init(&deque->empty_slots, 0, size - 1) != 0) {
     pthread_mutex_destroy(&deque->mutex);
     free(deque->orders);
     return -1;
@@ -49,9 +49,12 @@ int t_OrderDeque_enqueue(t_OrderDeque *deque, t_Order *order, t_OrderRequestMode
   if (deque == 0 || order == 0)
     return -1;
 
-  if (mode == ORDER_REQUEST_MODE_NON_BLOCKING)
-    if (sem_trywait(&deque->empty_slots) != 0)
-      return -1;
+  int temp_sem_value = 0;
+
+  sem_getvalue(&deque->empty_slots, &temp_sem_value);
+  if (mode == ORDER_REQUEST_MODE_NON_BLOCKING && temp_sem_value == 0) {
+    return -1;
+  }
 
   sem_wait(&deque->empty_slots);
   pthread_mutex_lock(&deque->mutex);
