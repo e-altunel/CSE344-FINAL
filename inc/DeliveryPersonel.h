@@ -8,6 +8,8 @@
 
 #define DELIVERY_PERSONEL_MAX_WAIT_TIME 2
 
+typedef struct s_Manager t_Manager;
+
 typedef struct s_DeliveryPersonel {
   int             id;
   t_OrderDeque   *deque_ref;
@@ -21,10 +23,12 @@ typedef struct s_DeliveryPersonel {
   time_t          first_failed_time;
   int             does_failed;
   int             delivered_order_count;
+  int             is_cancel;
+  t_Manager      *manager;
 } t_DeliveryPersonel;
 
 int  t_DeliveryPersonel_init(t_DeliveryPersonel *personel, int id, t_OrderDeque *deque, t_OrderDeque *finishedDeque,
-                             int order_cap);
+                             int order_cap, t_Manager *manager);
 void t_DeliveryPersonel_destroy(t_DeliveryPersonel *personel);
 void t_DeliveryPersonel_set_exit(t_DeliveryPersonel *personel);
 

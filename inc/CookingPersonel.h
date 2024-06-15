@@ -6,6 +6,8 @@
 #include <OrderDeque.h>
 #include <pthread.h>
 
+typedef struct s_Manager t_Manager;
+
 typedef struct s_CookingPersonel {
   int             id;
   t_OrderDeque   *deque_ref;
@@ -20,10 +22,11 @@ typedef struct s_CookingPersonel {
   int             is_exit;
   int             is_cancelled;
   int             cooked_count;
+  t_Manager      *manager;
 } t_CookingPersonel;
 
 int  t_CookingPersonel_init(t_CookingPersonel *personel, int id, t_CookOven *oven, t_OrderDeque *deque,
-                            t_OrderDeque *finishedDeque);
+                            t_OrderDeque *finishedDeque, t_Manager *manager);
 void t_CookingPersonel_destroy(t_CookingPersonel *personel);
 void t_CookingPersonel_set_exit(t_CookingPersonel *personel);
 

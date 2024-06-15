@@ -1,13 +1,15 @@
 #define _DEFAULT_SOURCE
 
 #include <CookingPersonel.h>
+#include <Matrix.h>
+#include <printer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
 
 int t_CookingPersonel_init(t_CookingPersonel *personel, int id, t_CookOven *oven, t_OrderDeque *deque,
-                           t_OrderDeque *finishedDeque) {
+                           t_OrderDeque *finishedDeque, t_Manager *manager) {
   if (personel == 0 || oven == 0 || deque == 0)
     return -1;
 
@@ -20,6 +22,7 @@ int t_CookingPersonel_init(t_CookingPersonel *personel, int id, t_CookOven *oven
   personel->is_exit           = 0;
   personel->is_cancelled      = 0;
   personel->cooked_count      = 0;
+  personel->manager           = manager;
 
   if (pthread_mutex_init(&personel->job_lock, 0) != 0)
     return -1;
@@ -57,7 +60,8 @@ void t_CookingPersonel_destroy(t_CookingPersonel *personel) {
   pthread_mutex_destroy(&personel->job_lock);
   pthread_mutex_destroy(&personel->variable_lock);
 
-  printf("Cooking personel %d cooked %d orders\n", personel->id, personel->cooked_count);
+  LOG(1, "Cooking Personel %d cooked %d orders\n", personel->id, personel->cooked_count);
+  SEND(2, "Cooking Personel %d cooked %d orders\n", personel->id, personel->cooked_count);
 
   if (personel->active_order != 0)
     free(personel->active_order);
@@ -116,18 +120,13 @@ int t_CookingPersonel_prepare(t_CookingPersonel *personel) {
   }
   pthread_mutex_unlock(&personel->variable_lock);
 
-  for (int i = 0; i < 10; i++) {
-    pthread_mutex_lock(&personel->job_lock);
-    sem_wait(&personel->oven_ref->available_aparatus);
-    usleep(10000);
-    sem_post(&personel->oven_ref->available_aparatus);
-    pthread_mutex_unlock(&personel->job_lock);
-  }
+  calculate_prepare_time(personel, 1);
 
   pthread_mutex_lock(&personel->variable_lock);
   if (personel->active_order != 0) {
     personel->active_order->is_prepared = 1;
-    printf("Personel %d prepared order %d\n", personel->id, personel->active_order->id);
+    LOG(1, "Cooking Personel %d prepared order %d\n", personel->id, personel->active_order->id);
+    SEND(2, "Cooking Personel %d prepared order %d\n", personel->id, personel->active_order->id);
   }
   pthread_mutex_unlock(&personel->variable_lock);
 
@@ -150,6 +149,9 @@ int t_CookingPersonel_insert(t_CookingPersonel *personel) {
   personel->pending_order = personel->active_order;
   personel->active_order  = 0;
 
+  LOG(1, "Cooking Personel %d inserted order %d\n", personel->id, personel->pending_order->id);
+  SEND(2, "Cooking Personel %d inserted order %d\n", personel->id, personel->pending_order->id);
+
   pthread_mutex_unlock(&personel->variable_lock);
   pthread_mutex_unlock(&personel->job_lock);
 
@@ -164,14 +166,11 @@ int t_CookingPersonel_cook(t_CookingPersonel *personel) {
   }
   pthread_mutex_unlock(&personel->variable_lock);
 
-  for (int i = 0; i < 5; i++) {
-    usleep(10000);
-  }
+  calculate_prepare_time(0, 2);
 
   pthread_mutex_lock(&personel->variable_lock);
   if (personel->pending_order != 0) {
     personel->pending_order->is_cooked = 1;
-    printf("Personel %d cooked order %d\n", personel->id, personel->pending_order->id);
   }
   pthread_mutex_unlock(&personel->variable_lock);
 
@@ -191,7 +190,8 @@ int t_CookingPersonel_remove(t_CookingPersonel *personel) {
 
   t_CookOven_remove(oven);
 
-  printf("Personel %d finished order %d\n", personel->id, personel->pending_order->id);
+  LOG(1, "Cooking Personel %d finished order %d\n", personel->id, personel->pending_order->id);
+  SEND(2, "Cooking Personel %d finished order %d\n", personel->id, personel->pending_order->id);
 
   t_OrderDeque_enqueue(personel->finishedDeque_ref, personel->pending_order, ORDER_REQUEST_MODE_BLOCKING);
   free(personel->pending_order);
@@ -213,6 +213,8 @@ int t_CookingPersonel_cancel(t_CookingPersonel *personel, int order_id) {
     free(personel->active_order);
     personel->active_order = 0;
     sem_post(&personel->oven_ref->available_aparatus);
+    LOG(1, "Cooking Personel %d cancelled order %d\n", personel->id, order_id);
+    SEND(2, "Cooking Personel %d cancelled order %d\n", personel->id, order_id);
     if (order_id != -1) {
       pthread_mutex_unlock(&personel->variable_lock);
       return 0;
@@ -223,6 +225,8 @@ int t_CookingPersonel_cancel(t_CookingPersonel *personel, int order_id) {
     free(personel->pending_order);
     personel->pending_order = 0;
     sem_post(&personel->oven_ref->available_slots);
+    LOG(1, "Cooking Personel %d cancelled order %d from oven\n", personel->id, order_id);
+    SEND(2, "Cooking Personel %d cancelled order %d from oven\n", personel->id, order_id);
     pthread_mutex_unlock(&personel->variable_lock);
     return 0;
   }
