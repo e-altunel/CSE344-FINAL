@@ -35,12 +35,15 @@ server: PideShop
 	clear
 	valgrind -q --leak-check=full ./PideShop 8080 10 10 10
 
-re: clean all test.out
+re: clean all
 
 test.out: $(objs) test.o
 	$(CC) $(CCFLAGS) $^ -o test.out $(CCAFTER) 
 
 test: test.out
 	$(MEMCHECK) ./test.out
+
+Huseyin_Kocak_200104004101_CSE344_FINAL.zip: $(wildcard src/*.c) $(wildcard inc/*.h) makefile report.pdf client.c server.c
+	zip -r $@ $^
 
 .PHONY: all clean re client server test fclean
